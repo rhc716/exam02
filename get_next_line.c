@@ -6,7 +6,7 @@
 /*   By: hroh <hroh@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/24 23:26:29 by hroh              #+#    #+#             */
-/*   Updated: 2020/11/17 13:33:46 by hroh             ###   ########.fr       */
+/*   Updated: 2020/11/18 15:33:48 by hroh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,24 +22,20 @@ size_t	ft_strlen(const char *str)
 	return (s);
 }
 
-size_t	ft_strlcpy(char *dest, const char *src, size_t size)
+void	ft_strlcpy(char *dest, const char *src, size_t size)
 {
 	size_t s;
 	size_t src_len;
 
 	s = 0;
-	if (!dest || !src)
-		return (0);
-	src_len = ft_strlen(src);
-	if (size == 0)
-		return (src_len);
+	if (!dest || !src || size == 0)
+		return ;
 	while (src[s] && s < size - 1)
 	{
 		dest[s] = src[s];
 		s++;
 	}
 	dest[s] = 0;
-	return (src_len);
 }
 
 char	*ft_strdup(const char *str)
@@ -106,27 +102,6 @@ static int	check_newline(char *appended)
 	}
 	return (-1);
 }
-#include <stdio.h>
-static int	return_value(int read_i, char **appended, char **line)
-{
-	int				n_pos;
-
-	if (read_i < 0)
-		return (-1);
-	if (*appended && (n_pos = check_newline(*appended)) >= 0)
-	{
-		assign_next_line(appended, line, n_pos);
-		return (1);
-	}
-	else if (*appended)
-	{
-		*line = *appended;
-		*appended = 0;
-		return (0);
-	}
-	*line = ft_strdup("");
-	return (0);
-}
 
 int			get_next_line(char **line)
 {
@@ -141,15 +116,29 @@ int			get_next_line(char **line)
 		appended = ft_strjoin(appended, buf);
 		if ((n_pos = check_newline(appended)) >= 0)
 		{
-			printf("ap : %s\n", appended);
 			assign_next_line(&appended, line, n_pos);
 			return (1);
 		}
 	}
-	return (return_value(read_i, &appended, line));
+	if (read_i < 0)
+		return (-1);
+	if (appended && (n_pos = check_newline(appended)) >= 0)
+	{
+		assign_next_line(&appended, line, n_pos);
+		return (1);
+	}
+	else if (appended)
+	{
+		line = &appended;
+		appended = 0;
+		return (0);
+	}
+	*line = ft_strdup("");
+	return (0);
 }
 
-int	main(void)
+#include <stdio.h>
+int main(void)
 {
 	int		r;
 	char	*line;
