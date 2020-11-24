@@ -6,7 +6,7 @@
 /*   By: hroh <hroh@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/24 23:26:29 by hroh              #+#    #+#             */
-/*   Updated: 2020/11/18 15:33:48 by hroh             ###   ########.fr       */
+/*   Updated: 2020/11/24 19:07:46 by hroh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,7 @@ size_t	ft_strlen(const char *str)
 void	ft_strlcpy(char *dest, const char *src, size_t size)
 {
 	size_t s;
-	size_t src_len;
-
+	
 	s = 0;
 	if (!dest || !src || size == 0)
 		return ;
@@ -70,33 +69,35 @@ char	*ft_strjoin(char *s1, char *s2)
 	return (re);
 }
 
-static void	assign_next_line(char **appended, char **line, int n_pos)
+#include <stdio.h>
+
+static void	work_gnl(char **ap, char **line, int n_pos)
 {
 	char	*temp;
 
-	(*appended)[n_pos] = 0;
-	*line = ft_strdup(*appended);
-	if (ft_strlen(*appended + n_pos + 1) == 0)
+	(*ap)[n_pos] = 0;
+	*line = ft_strdup(*ap);
+	if (ft_strlen(*ap + n_pos + 1) == 0)
 	{
-		free(*appended);
-		*appended = 0;
+		free(*ap);
+		*ap = 0;
 	}
 	else
 	{
-		temp = ft_strdup(*appended + n_pos + 1);
-		free(*appended);
-		*appended = temp;
+		temp = ft_strdup(*ap + n_pos + 1);
+		free(*ap);
+		*ap = temp;
 	}
 }
 
-static int	check_newline(char *appended)
+static int	find_new(char *ap)
 {
 	int i;
 
 	i = 0;
-	while (appended[i])
+	while (ap[i])
 	{
-		if (appended[i] == '\n')
+		if (ap[i] == '\n')
 			return (i);
 		i++;
 	}
@@ -105,52 +106,36 @@ static int	check_newline(char *appended)
 
 int			get_next_line(char **line)
 {
-	static char		*appended;
-	char			buf[128];
+	static char		*ap;
+	char			buf[2];
 	int				read_i;
 	int				n_pos;
 
-	while ((read_i = read(0, buf, 127)) > 0)
+	// 버퍼크기 2, 햇갈리지 말 것
+	while ((read_i = read(0, buf, 1)) > 0)
 	{
 		buf[read_i] = 0;
-		appended = ft_strjoin(appended, buf);
-		if ((n_pos = check_newline(appended)) >= 0)
+		ap = ft_strjoin(ap, buf);
+		if ((n_pos = find_new(ap)) >= 0)
 		{
-			assign_next_line(&appended, line, n_pos);
+			work_gnl(&ap, line, n_pos);
 			return (1);
 		}
 	}
 	if (read_i < 0)
 		return (-1);
-	if (appended && (n_pos = check_newline(appended)) >= 0)
+	if (ap && (n_pos = find_new(ap)) >= 0)
 	{
-		assign_next_line(&appended, line, n_pos);
+		work_gnl(&ap, line, n_pos);
 		return (1);
 	}
-	else if (appended)
+	else if (ap)
 	{
-		line = &appended;
-		appended = 0;
+		// 햇갈리지 말 것 line = &ap 아님 !!
+		*line = ap;
+		ap = 0;
 		return (0);
 	}
 	*line = ft_strdup("");
 	return (0);
-}
-
-#include <stdio.h>
-int main(void)
-{
-	int		r;
-	char	*line;
-
-	line = NULL;
-	while ((r = get_next_line(&line)) > 0)
-	{
-		printf("%s\n", line);
-		free(line);
-		line = NULL;
-	}
-	printf("%s", line);
-	free(line);
-	line = NULL;
 }
